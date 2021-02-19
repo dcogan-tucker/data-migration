@@ -4,8 +4,6 @@ import com.sparta.dominic.model.database.EmployeeDTO;
 
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public final class EmployeeDTOManager
 {
@@ -29,28 +27,21 @@ public final class EmployeeDTOManager
 		}
 	}
 
-	public boolean employeeQueueIsEmpty()
+	public boolean queueNotEmpty()
 	{
-		return employeeDTOQueue.isEmpty();
+		return !employeeDTOQueue.isEmpty();
 	}
 
 	public EmployeeDTO pollEmployeeFromQueue()
 	{
 		synchronized (employeeDTOQueue)
 		{
-			while (employeeDTOQueue.isEmpty())
+			if (queueNotEmpty())
 			{
-				try
-				{
-					employeeDTOQueue.wait();
-				} catch (InterruptedException e)
-				{
-					Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
-					logger.log(Level.SEVERE, e.getMessage(), e);
-				}
+				employeeDTOQueue.notifyAll();
+				return employeeDTOQueue.poll();
 			}
-			employeeDTOQueue.notifyAll();
-			return  employeeDTOQueue.poll();
+			return null;
 		}
 	}
 
