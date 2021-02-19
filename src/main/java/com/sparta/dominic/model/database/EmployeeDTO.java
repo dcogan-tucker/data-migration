@@ -3,11 +3,10 @@ package com.sparta.dominic.model.database;
 import com.sparta.dominic.model.util.DateFormatter;
 
 import java.sql.Date;
-import java.util.Objects;
 
 public class EmployeeDTO
 {
-	private final String id;
+	private final int id;
 	private final String namePrefix;
 	private final String firstName;
 	private final char middleInitial;
@@ -16,8 +15,9 @@ public class EmployeeDTO
 	private final String email;
 	private final Date dob;
 	private final Date joinDate;
+	private final int salary;
 
-	public EmployeeDTO(String id, String namePrefix, String firstName, char middleInitial, String lastName, char gender, String email, Date dob, Date joinDate)
+	public EmployeeDTO(int id, String namePrefix, String firstName, char middleInitial, String lastName, char gender, String email, Date dob, Date joinDate, int salary)
 	{
 		this.id = id;
 		this.namePrefix = namePrefix;
@@ -28,17 +28,18 @@ public class EmployeeDTO
 		this.email = email;
 		this.dob = dob;
 		this.joinDate = joinDate;
+		this.salary = salary;
 	}
 
 	public EmployeeDTO(String... data)
 	{
-		this(data[0], data[1], data[2], data[3].charAt(0),
+		this(Integer.parseInt(data[0]), data[1], data[2], data[3].charAt(0),
 				data[4], data[5].charAt(0), data[6],
 				DateFormatter.format(data[7]),
-				DateFormatter.format(data[8]));
+				DateFormatter.format(data[8]), Integer.parseInt(data[9]));
 	}
 
-	public String getId()
+	public int getId()
 	{
 		return id;
 	}
@@ -83,17 +84,26 @@ public class EmployeeDTO
 		return joinDate;
 	}
 
+	public int getSalary()
+	{
+		return salary;
+	}
+
 	@Override
 	public boolean equals(Object obj)
 	{
-		EmployeeDTO otherEmployeeDTO = (EmployeeDTO) obj;
-		return Objects.equals(id, otherEmployeeDTO.id);
+		if (obj instanceof EmployeeDTO)
+		{
+			EmployeeDTO otherEmployeeDTO = (EmployeeDTO) obj;
+			return id == otherEmployeeDTO.id;
+		}
+		return false;
 	}
 
 	@Override
 	public int hashCode()
 	{
-		return Objects.hash(id);
+		return id;
 	}
 
 	@Override

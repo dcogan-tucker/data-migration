@@ -8,12 +8,25 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.Properties;
 
+import static java.sql.Statement.SUCCESS_NO_INFO;
+
 public class EmployeesDAO
 {
-	private static final String URL = "jdbc:mysql://localhost:3306/my_local";
+	private static final String URL = "jdbc:mysql://localhost:3306/my_local?allowLoadLocalInfile=true&rewriteBatchedStatements=false";
 
-	private Connection connection;
-	private final Properties properties = new Properties();
+	private Properties properties;
+	private final int BATCH_SIZE = 100;
+
+	{
+		try
+		{
+			properties = new Properties();
+			properties.load(new FileReader("src/main/resources/login.properties"));
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
 
 	public void setUp()
 	{
@@ -26,18 +39,19 @@ public class EmployeesDAO
 
 	public void transferToDatabase(EmployeeDTOManager employeeDTOManager)
 	{
-		String addEmployees = "INSERT INTO employees (employee_id, prefix, first_name, " +
-													 "middle_initial, last_name, gender, " +
-													 "email, date_of_birth, join_date) " +
-													 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		String addEmployees = "INSERT INTO employees " +
+						      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-		try (PreparedStatement addEmployeeStatement = connectToDatabase().prepareStatement(addEmployees))
+		PreparedStatement addEmployeeStatement = null;
+		try (Connection connection = connectToDatabase())
 		{
+			addEmployeeStatement = connection.prepareStatement(addEmployees);
 			int employeesAdded = 0;
+			int batchCount = 0;
 			while (!employeeDTOManager.employeeQueueIsEmpty())
 			{
 				EmployeeDTO employeeDTO = employeeDTOManager.pollEmployeeFromQueue();
-				addEmployeeStatement.setString(1, employeeDTO.getId());
+				addEmployeeStatement.setInt(1, employeeDTO.getId());
 				addEmployeeStatement.setString(2, employeeDTO.getNamePrefix());
 				addEmployeeStatement.setString(3, employeeDTO.getFirstName());
 				addEmployeeStatement.setString(4, String.valueOf(employeeDTO.getMiddleInitial()));
@@ -46,11 +60,27 @@ public class EmployeesDAO
 				addEmployeeStatement.setString(7, employeeDTO.getEmail());
 				addEmployeeStatement.setDate(8, employeeDTO.getDob());
 				addEmployeeStatement.setDate(9, employeeDTO.getJoinDate());
-				int hasRun = addEmployeeStatement.executeUpdate();
-				if (hasRun == 1)
+				addEmployeeStatement.setInt(10, employeeDTO.getSalary());
+				addEmployeeStatement.addBatch();
+				batchCount++;
+				if (batchCount % BATCH_SIZE == 0)
+				{
+					int[] updates = addEmployeeStatement.executeBatch();
+					for (int i : updates)
+					{
+						if (i >= 0 || i == SUCCESS_NO_INFO)
+						{
+							employeesAdded++;
+						}
+					}
+				}
+			}
+			int[] updates = addEmployeeStatement.executeBatch();
+			for (int i : updates)
+			{
+				if (i >= 0)
 				{
 					employeesAdded++;
-					//Printer.printMessage("Employee with id " + dto.getId() + " added to the table.");
 				}
 			}
 			Printer.printMessage(Thread.currentThread().getName() + " Has Added " + employeesAdded + " Successfully To the Employees Table.");
@@ -60,14 +90,33 @@ public class EmployeesDAO
 		}
 		finally
 		{
-			closeDatabaseConnection();
+			closeStatement(addEmployeeStatement);
+		}
+	}
+
+	public void transferFromLocalCSV(String path)
+	{
+		String loadData = "LOAD DATA LOCAL INFILE '" + path + "' INTO TABLE employees";
+
+		PreparedStatement loadDataStatement = null;
+		try(Connection connection = connectToDatabase())
+		{
+			loadDataStatement = connection.prepareStatement(loadData);
+			loadDataStatement.executeUpdate();
+		} catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			closeStatement(loadDataStatement);
 		}
 	}
 
 	private void createTable()
 	{
 		String createTable = "CREATE TABLE employees (" +
-							 "employee_id CHAR(6) PRIMARY KEY," +
+							 "employee_id INT(6) PRIMARY KEY," +
 							 "prefix VARCHAR(10)," +
 							 "first_name VARCHAR(30)," +
 							 "middle_initial CHAR(1)," +
@@ -75,11 +124,14 @@ public class EmployeesDAO
 							 "gender CHAR(1)," +
 							 "email VARCHAR(50)," +
 							 "date_of_birth DATE," +
-							 "join_date DATE" +
+							 "join_date DATE," +
+							 "salary INT(6)" +
 							 ")";
 
-		try (PreparedStatement createStatement = connectToDatabase().prepareStatement(createTable))
+		PreparedStatement createStatement = null;
+		try (Connection connection = connectToDatabase())
 		{
+			createStatement = connection.prepareStatement(createTable);
 			int hasRun = createStatement.executeUpdate();
 			if (hasRun == 0)
 			{
@@ -91,7 +143,7 @@ public class EmployeesDAO
 		}
 		finally
 		{
-			closeDatabaseConnection();
+			closeStatement(createStatement);
 		}
 	}
 
@@ -99,8 +151,10 @@ public class EmployeesDAO
 	{
 		String dropTable = "DROP TABLE employees";
 
-		try (PreparedStatement dropStatement = connectToDatabase().prepareStatement(dropTable))
+		PreparedStatement dropStatement = null;
+		try (Connection connection = connectToDatabase())
 		{
+			dropStatement = connection.prepareStatement(dropTable);
 			int hasRun = dropStatement.executeUpdate();
 			if (hasRun == 0)
 			{
@@ -112,16 +166,16 @@ public class EmployeesDAO
 		}
 		finally
 		{
-			closeDatabaseConnection();
+			closeStatement(dropStatement);
 		}
 	}
 
 	private boolean hasEmployeesTable()
 	{
 		ResultSet table = null;
-		try
+		try (Connection connection = connectToDatabase())
 		{
-			DatabaseMetaData databaseMetaData = connectToDatabase().getMetaData();
+			DatabaseMetaData databaseMetaData = connection.getMetaData();
 			table = databaseMetaData.getTables(null, null, "employees", null);
 			if (table.next())
 			{
@@ -134,32 +188,31 @@ public class EmployeesDAO
 		finally
 		{
 			closeResultSet(table);
-			closeDatabaseConnection();
 		}
 		return false;
 	}
 
 	private Connection connectToDatabase()
 	{
+		Connection connection = null;
 		try
 		{
-			properties.load(new FileReader("src/main/resources/login.properties"));
 			connection = DriverManager.getConnection(URL,
 					properties.getProperty("username"), properties.getProperty("password"));
-		}  catch (IOException | SQLException e)
+		}  catch (SQLException e)
 		{
 			e.printStackTrace();
 		}
 		return connection;
 	}
 
-	private void closeDatabaseConnection()
+	private void closeStatement(Statement statement)
 	{
-		if (connection != null)
+		if (statement !=null)
 		{
 			try
 			{
-				connection.close();
+				statement.close();
 			} catch (SQLException e)
 			{
 				e.printStackTrace();

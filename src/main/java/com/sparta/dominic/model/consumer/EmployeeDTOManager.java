@@ -8,7 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public final class EmployeeDTOManager
 {
 	public final Queue<EmployeeDTO> employeeDTOQueue = new LinkedBlockingQueue<>();
-	private final Map<String, EmployeeDTO> employees = new HashMap<>();
+	private final Map<Integer, EmployeeDTO> employees = new HashMap<>();
 	private final List<EmployeeDTO> duplicates = new ArrayList<>();
 
 	private final Object lock = new Object();
