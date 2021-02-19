@@ -7,13 +7,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static java.sql.Statement.SUCCESS_NO_INFO;
 
 public class EmployeesDAO
 {
-	private static final String URL = "jdbc:mysql://localhost:3306/my_local?allowLoadLocalInfile=true&rewriteBatchedStatements=true";
-
 	private Properties properties;
 	private final int BATCH_SIZE = 100;
 
@@ -24,7 +24,8 @@ public class EmployeesDAO
 			properties.load(new FileReader("src/main/resources/login.properties"));
 		} catch (IOException e)
 		{
-			e.printStackTrace();
+			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
+			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 
@@ -78,7 +79,7 @@ public class EmployeesDAO
 			int[] updates = addEmployeeStatement.executeBatch();
 			for (int i : updates)
 			{
-				if (i >= 0)
+				if (i >= 0 || i == SUCCESS_NO_INFO)
 				{
 					employeesAdded++;
 				}
@@ -86,7 +87,8 @@ public class EmployeesDAO
 			Printer.printMessage(Thread.currentThread().getName() + " Has Added " + employeesAdded + " Successfully To the Employees Table.");
 		} catch (SQLException e)
 		{
-			e.printStackTrace();
+			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
+			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
 		finally
 		{
@@ -105,7 +107,8 @@ public class EmployeesDAO
 			loadDataStatement.executeUpdate();
 		} catch (SQLException e)
 		{
-			e.printStackTrace();
+			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
+			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
 		finally
 		{
@@ -139,7 +142,8 @@ public class EmployeesDAO
 			}
 		} catch (SQLException e)
 		{
-			e.printStackTrace();
+			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
+			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
 		finally
 		{
@@ -162,7 +166,8 @@ public class EmployeesDAO
 			}
 		} catch (SQLException e)
 		{
-			e.printStackTrace();
+			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
+			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
 		finally
 		{
@@ -183,7 +188,8 @@ public class EmployeesDAO
 			}
 		} catch (SQLException e)
 		{
-			e.printStackTrace();
+			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
+			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
 		finally
 		{
@@ -197,11 +203,12 @@ public class EmployeesDAO
 		Connection connection = null;
 		try
 		{
-			connection = DriverManager.getConnection(URL,
+			connection = DriverManager.getConnection((String) properties.get("url"),
 					properties.getProperty("username"), properties.getProperty("password"));
 		}  catch (SQLException e)
 		{
-			e.printStackTrace();
+			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
+			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
 		return connection;
 	}
@@ -215,7 +222,8 @@ public class EmployeesDAO
 				statement.close();
 			} catch (SQLException e)
 			{
-				e.printStackTrace();
+				Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
+				logger.log(Level.SEVERE, e.getMessage(), e);
 			}
 		}
 	}
@@ -229,7 +237,8 @@ public class EmployeesDAO
 				resultSet.close();
 			} catch (SQLException e)
 			{
-				e.printStackTrace();
+				Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
+				logger.log(Level.SEVERE, e.getMessage(), e);
 			}
 		}
 	}

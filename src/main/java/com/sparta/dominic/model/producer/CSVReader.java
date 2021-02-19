@@ -6,6 +6,8 @@ import com.sparta.dominic.model.consumer.EmployeeDTOManager;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class CSVReader
 {
@@ -21,7 +23,8 @@ public final class CSVReader
 			
 		} catch (IOException e)
 		{
-			e.printStackTrace();
+			Logger logger = Logger.getLogger(CSVReader.class.getSimpleName() + "Logger");
+			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 

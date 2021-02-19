@@ -3,6 +3,8 @@ package com.sparta.dominic.model.util;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.sql.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DateFormatter
 {
@@ -17,7 +19,8 @@ public class DateFormatter
 			date1 = new Date(DATE_FORMAT.parse(date).getTime());
 		} catch (ParseException e)
 		{
-			e.printStackTrace();
+			Logger logger = Logger.getLogger(DateFormatter.class.getSimpleName() + "Logger");
+			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
 		return date1;
 	}
