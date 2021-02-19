@@ -67,7 +67,7 @@ public class DataMigrationApp
 		try
 		{
 			threadPool.shutdown();
-			threadPool.awaitTermination(2, TimeUnit.MINUTES);
+			threadPool.awaitTermination(30, TimeUnit.SECONDS);
 			threadPool.shutdownNow();
 		} catch (InterruptedException e)
 		{

@@ -45,7 +45,7 @@ public class EmployeesDAO
 		{
 			int employeesAdded = 0;
 			int batchCount = 0;
-			while (!employeeDTOManager.employeeQueueIsEmpty())
+			while (employeeDTOManager.queueNotEmpty())
 			{
 				EmployeeDTO employeeDTO = employeeDTOManager.pollEmployeeFromQueue();
 				addEmployeeStatement.setInt(1, employeeDTO.getId());
