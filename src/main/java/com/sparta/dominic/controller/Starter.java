@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 public class Starter
 {
-	private static final String PATH_TO_PROJECT = "/data/sparta-global/data-migration/";
 	private static final String CSV_PATH = "src/main/resources/employees.csv";
 	private static final String LARGE_CSV_PATH = "src/main/resources/EmployeeRecordsLarge.csv";
 
@@ -26,14 +25,14 @@ public class Starter
 
 		long start1 = System.nanoTime();
 		Runnable loadFromBufferedReader = () ->
-				CSVReader.transferToEmployeeDTOManager(CSV_PATH, employeeDTOManager);
+				CSVReader.transferToEmployeeDTOManager(LARGE_CSV_PATH, employeeDTOManager);
 		createAndStartThreads(loadFromBufferedReader, threadPool, 0);
 		long end1 = System.nanoTime();
 
 		Printer.printMessage("Transfer From CSV to DTO Complete. Time Taken: " + (double) (end1 - start1) / 1000000000 + " seconds.\n");
 
 		Runnable addToDatabase = dtoToDatabase(employeeDTOManager);
-		createAndStartThreads(addToDatabase, threadPool, 0);
+		createAndStartThreads(addToDatabase, threadPool, 16);
 
 		shutdownAndTerminate(threadPool);
 		long end = System.nanoTime();
@@ -74,8 +73,8 @@ public class Starter
 		try
 		{
 			threadPool.shutdown();
-			threadPool.shutdownNow();
 			threadPool.awaitTermination(2, TimeUnit.MINUTES);
+			threadPool.shutdownNow();
 		} catch (InterruptedException e)
 		{
 			e.printStackTrace();
