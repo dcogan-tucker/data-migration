@@ -17,24 +17,25 @@ public class Starter
 	public static void starter()
 	{
 		long start = System.nanoTime();
-		setUpDatabase();
-
 		EmployeeDTOManager employeeDTOManager = new EmployeeDTOManager();
+		EmployeesDAO employeesDAO = new EmployeesDAO(employeeDTOManager);
 
-		ExecutorService threadPool = Executors.newCachedThreadPool();
+		employeesDAO.setUp();
+
+		ExecutorService producers = Executors.newCachedThreadPool();
+		ExecutorService consumers = Executors.newCachedThreadPool();
 
 		long start1 = System.nanoTime();
-		Runnable loadFromBufferedReader = () ->
-				CSVReader.transferToEmployeeDTOManager(LARGE_CSV_PATH, employeeDTOManager);
-		createAndStartThreads(loadFromBufferedReader, threadPool, 0);
+		CSVReader.transferToDTOManager(LARGE_CSV_PATH, employeeDTOManager);
 		long end1 = System.nanoTime();
 
-		Printer.printMessage("Transfer From CSV to DTO Complete. Time Taken: " + (double) (end1 - start1) / 1000000000 + " seconds.\n");
+		Printer.printMessage("Transfer From CSV to DTO Manager. Time Taken: " + (double) (end1 - start1) / 1000000000 + " seconds.\n");
 
-		Runnable addToDatabase = dtoToDatabase(employeeDTOManager);
-		createAndStartThreads(addToDatabase, threadPool, 16);
+		Runnable transferToDatabase = () -> employeesDAO.transferToDatabase();
+		createAndStartThreads(transferToDatabase, consumers, 16);
 
-		shutdownAndTerminate(threadPool);
+		shutdownAndTerminate(producers);
+		shutdownAndTerminate(consumers);
 		long end = System.nanoTime();
 
 		printDuplicates(employeeDTOManager, false);
@@ -42,10 +43,6 @@ public class Starter
 		Printer.printMessage("\nMigration Complete. Total Time Taken: " + (double) (end - start) / 1000000000 + " seconds.");
 	}
 
-	private static void setUpDatabase()
-	{
-		new EmployeesDAO().setUp();
-	}
 
 	private static void createAndStartThreads(Runnable runnable, ExecutorService threadPool, int numberOfThreads)
 	{
@@ -57,15 +54,6 @@ public class Starter
 		{
 			threadPool.submit(runnable);
 		}
-	}
-
-	private static Runnable dtoToDatabase(EmployeeDTOManager employeeDTOManager)
-	{
-		return () ->
-		{
-			EmployeesDAO threadEmployeesDAO = new EmployeesDAO();
-			threadEmployeesDAO.transferToDatabase(employeeDTOManager);
-		};
 	}
 
 	private static void shutdownAndTerminate(ExecutorService threadPool)

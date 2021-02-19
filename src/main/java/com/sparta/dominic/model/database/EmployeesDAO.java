@@ -14,6 +14,7 @@ import static java.sql.Statement.SUCCESS_NO_INFO;
 
 public class EmployeesDAO
 {
+	private final EmployeeDTOManager employeeDTOManager;
 	private Properties properties;
 	private final int BATCH_SIZE = 100;
 
@@ -29,16 +30,12 @@ public class EmployeesDAO
 		}
 	}
 
-	public void setUp()
+	public EmployeesDAO(EmployeeDTOManager employeeDTOManager)
 	{
-		if (hasEmployeesTable())
-		{
-			dropTable();
-		}
-		createTable();
+		this.employeeDTOManager = employeeDTOManager;
 	}
 
-	public void transferToDatabase(EmployeeDTOManager employeeDTOManager)
+	public void transferToDatabase()
 	{
 		String addEmployees = "INSERT INTO employees " +
 						      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -83,7 +80,7 @@ public class EmployeesDAO
 					employeesAdded++;
 				}
 			}
-			Printer.printMessage(Thread.currentThread().getName() + " Has Added " + employeesAdded + " Successfully To the Employees Table.");
+			Printer.printMessage(employeesAdded + " Employees Have Been Successfully Added to the Employees Table.");
 		} catch (SQLException e)
 		{
 			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
@@ -106,23 +103,47 @@ public class EmployeesDAO
 		}
 	}
 
+	private Connection connectToDatabase()
+	{
+		Connection connection = null;
+		try
+		{
+			connection = DriverManager.getConnection((String) properties.get("url"),
+					properties.getProperty("username"), properties.getProperty("password"));
+		}  catch (SQLException e)
+		{
+			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
+			logger.log(Level.SEVERE, e.getMessage(), e);
+		}
+		return connection;
+	}
+
+	public void setUp()
+	{
+		if (hasEmployeesTable())
+		{
+			dropTable();
+		}
+		createTable();
+	}
+
 	private void createTable()
 	{
 		String createTable = "CREATE TABLE employees (" +
-							 "employee_id INT(6) PRIMARY KEY," +
-							 "prefix VARCHAR(10)," +
-							 "first_name VARCHAR(30)," +
-							 "middle_initial CHAR(1)," +
-							 "last_name VARCHAR(30)," +
-							 "gender CHAR(1)," +
-							 "email VARCHAR(50)," +
-							 "date_of_birth DATE," +
-							 "join_date DATE," +
-							 "salary INT(6)" +
-							 ")";
+				"employee_id INT(6) PRIMARY KEY," +
+				"prefix VARCHAR(10)," +
+				"first_name VARCHAR(30)," +
+				"middle_initial CHAR(1)," +
+				"last_name VARCHAR(30)," +
+				"gender CHAR(1)," +
+				"email VARCHAR(50)," +
+				"date_of_birth DATE," +
+				"join_date DATE," +
+				"salary INT(6)" +
+				")";
 
 		try (Connection connection = connectToDatabase();
-			PreparedStatement createStatement = connection.prepareStatement(createTable);)
+			 PreparedStatement createStatement = connection.prepareStatement(createTable);)
 		{
 			int hasRun = createStatement.executeUpdate();
 			if (hasRun == 0)
@@ -141,7 +162,7 @@ public class EmployeesDAO
 		String dropTable = "DROP TABLE employees";
 
 		try (Connection connection = connectToDatabase();
-			PreparedStatement dropStatement = connection.prepareStatement(dropTable);)
+			 PreparedStatement dropStatement = connection.prepareStatement(dropTable);)
 		{
 			int hasRun = dropStatement.executeUpdate();
 			if (hasRun == 0)
@@ -170,20 +191,5 @@ public class EmployeesDAO
 			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
 		return false;
-	}
-
-	private Connection connectToDatabase()
-	{
-		Connection connection = null;
-		try
-		{
-			connection = DriverManager.getConnection((String) properties.get("url"),
-					properties.getProperty("username"), properties.getProperty("password"));
-		}  catch (SQLException e)
-		{
-			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
-			logger.log(Level.SEVERE, e.getMessage(), e);
-		}
-		return connection;
 	}
 }

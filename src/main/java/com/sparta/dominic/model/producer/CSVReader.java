@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 public final class CSVReader
 {
-	public static void transferToEmployeeDTOManager(String path, EmployeeDTOManager employeeDTOManager)
+	public static void transferToDTOManager(String path, EmployeeDTOManager dtoManager)
 	{
 		try(BufferedReader bufferedReader = loadToBufferedReader(path))
 		{
@@ -19,7 +19,7 @@ public final class CSVReader
 					.filter(line -> Character.isDigit(line.charAt(0)))
 					.map(line -> line.split(","))
 					.map(EmployeeDTO::new)
-					.forEach(employeeDTOManager::addEmployee);
+					.forEach(dtoManager::addEmployee);
 			
 		} catch (IOException e)
 		{

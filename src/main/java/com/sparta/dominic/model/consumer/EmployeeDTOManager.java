@@ -9,16 +9,14 @@ import java.util.logging.Logger;
 
 public final class EmployeeDTOManager
 {
-	public final Queue<EmployeeDTO> employeeDTOQueue = new LinkedBlockingQueue<>();
+	private final Queue<EmployeeDTO> employeeDTOQueue = new LinkedBlockingQueue<>();
 	private final Map<Integer, EmployeeDTO> employees = new HashMap<>();
 	private final List<EmployeeDTO> duplicates = new ArrayList<>();
-
-	private final Object lock = new Object();
 
 	public void addEmployee(EmployeeDTO employeeDTO)
 	{
 		EmployeeDTO check = employees.putIfAbsent(employeeDTO.getId(), employeeDTO);
-		synchronized (lock)
+		synchronized (employeeDTOQueue)
 		{
 			if (check == null)
 			{
@@ -27,40 +25,36 @@ public final class EmployeeDTOManager
 			{
 				duplicates.add(employeeDTO);
 			}
-			lock.notifyAll();
+			employeeDTOQueue.notifyAll();
 		}
 	}
 
 	public boolean employeeQueueIsEmpty()
 	{
-		synchronized (lock)
-		{
-			return employeeDTOQueue.isEmpty();
-		}
+		return employeeDTOQueue.isEmpty();
 	}
 
 	public EmployeeDTO pollEmployeeFromQueue()
 	{
-		synchronized (lock)
+		synchronized (employeeDTOQueue)
 		{
-			EmployeeDTO employeeDTO =  employeeDTOQueue.poll();
-			if (employeeDTO == null)
+			while (employeeDTOQueue.isEmpty())
 			{
 				try
 				{
-					lock.wait();
+					employeeDTOQueue.wait();
 				} catch (InterruptedException e)
 				{
 					Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
 					logger.log(Level.SEVERE, e.getMessage(), e);
 				}
-				employeeDTO = pollEmployeeFromQueue();
 			}
-			return employeeDTO;
+			employeeDTOQueue.notifyAll();
+			return  employeeDTOQueue.poll();
 		}
 	}
 
-	public Collection<EmployeeDTO> getDuplicates()
+	public List<EmployeeDTO> getDuplicates()
 	{
 		return duplicates;
 	}
