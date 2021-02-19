@@ -12,7 +12,7 @@ import static java.sql.Statement.SUCCESS_NO_INFO;
 
 public class EmployeesDAO
 {
-	private static final String URL = "jdbc:mysql://localhost:3306/my_local?allowLoadLocalInfile=true&rewriteBatchedStatements=false";
+	private static final String URL = "jdbc:mysql://localhost:3306/my_local?allowLoadLocalInfile=true&rewriteBatchedStatements=true";
 
 	private Properties properties;
 	private final int BATCH_SIZE = 100;
