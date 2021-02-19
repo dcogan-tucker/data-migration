@@ -43,10 +43,9 @@ public class EmployeesDAO
 		String addEmployees = "INSERT INTO employees " +
 						      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-		PreparedStatement addEmployeeStatement = null;
-		try (Connection connection = connectToDatabase())
+		try (Connection connection = connectToDatabase();
+			PreparedStatement addEmployeeStatement = connection.prepareStatement(addEmployees);)
 		{
-			addEmployeeStatement = connection.prepareStatement(addEmployees);
 			int employeesAdded = 0;
 			int batchCount = 0;
 			while (!employeeDTOManager.employeeQueueIsEmpty())
@@ -90,29 +89,20 @@ public class EmployeesDAO
 			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
 			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
-		finally
-		{
-			closeStatement(addEmployeeStatement);
-		}
 	}
 
 	public void transferFromLocalCSV(String path)
 	{
 		String loadData = "LOAD DATA LOCAL INFILE '" + path + "' INTO TABLE employees";
 
-		PreparedStatement loadDataStatement = null;
-		try(Connection connection = connectToDatabase())
+		try(Connection connection = connectToDatabase();
+			PreparedStatement loadDataStatement = connection.prepareStatement(loadData))
 		{
-			loadDataStatement = connection.prepareStatement(loadData);
 			loadDataStatement.executeUpdate();
 		} catch (SQLException e)
 		{
 			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
 			logger.log(Level.SEVERE, e.getMessage(), e);
-		}
-		finally
-		{
-			closeStatement(loadDataStatement);
 		}
 	}
 
@@ -131,10 +121,9 @@ public class EmployeesDAO
 							 "salary INT(6)" +
 							 ")";
 
-		PreparedStatement createStatement = null;
-		try (Connection connection = connectToDatabase())
+		try (Connection connection = connectToDatabase();
+			PreparedStatement createStatement = connection.prepareStatement(createTable);)
 		{
-			createStatement = connection.prepareStatement(createTable);
 			int hasRun = createStatement.executeUpdate();
 			if (hasRun == 0)
 			{
@@ -145,20 +134,15 @@ public class EmployeesDAO
 			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
 			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
-		finally
-		{
-			closeStatement(createStatement);
-		}
 	}
 
 	private void dropTable()
 	{
 		String dropTable = "DROP TABLE employees";
 
-		PreparedStatement dropStatement = null;
-		try (Connection connection = connectToDatabase())
+		try (Connection connection = connectToDatabase();
+			PreparedStatement dropStatement = connection.prepareStatement(dropTable);)
 		{
-			dropStatement = connection.prepareStatement(dropTable);
 			int hasRun = dropStatement.executeUpdate();
 			if (hasRun == 0)
 			{
@@ -169,19 +153,13 @@ public class EmployeesDAO
 			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
 			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
-		finally
-		{
-			closeStatement(dropStatement);
-		}
 	}
 
 	private boolean hasEmployeesTable()
 	{
-		ResultSet table = null;
-		try (Connection connection = connectToDatabase())
+		try (Connection connection = connectToDatabase();
+			 ResultSet table = connection.getMetaData().getTables(null, null, "employees", null))
 		{
-			DatabaseMetaData databaseMetaData = connection.getMetaData();
-			table = databaseMetaData.getTables(null, null, "employees", null);
 			if (table.next())
 			{
 				return true;
@@ -190,10 +168,6 @@ public class EmployeesDAO
 		{
 			Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
 			logger.log(Level.SEVERE, e.getMessage(), e);
-		}
-		finally
-		{
-			closeResultSet(table);
 		}
 		return false;
 	}
@@ -211,35 +185,5 @@ public class EmployeesDAO
 			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
 		return connection;
-	}
-
-	private void closeStatement(Statement statement)
-	{
-		if (statement !=null)
-		{
-			try
-			{
-				statement.close();
-			} catch (SQLException e)
-			{
-				Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
-				logger.log(Level.SEVERE, e.getMessage(), e);
-			}
-		}
-	}
-
-	private void closeResultSet(ResultSet resultSet)
-	{
-		if (resultSet != null)
-		{
-			try
-			{
-				resultSet.close();
-			} catch (SQLException e)
-			{
-				Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
-				logger.log(Level.SEVERE, e.getMessage(), e);
-			}
-		}
 	}
 }
