@@ -2,7 +2,7 @@ package com.sparta.dominic.model;
 
 import com.sparta.dominic.controller.EmployeeDTOManager;
 import com.sparta.dominic.util.DataMigrationLogger;
-import com.sparta.dominic.view.Printer;
+import com.sparta.dominic.util.Printer;
 
 import java.io.FileReader;
 import java.io.IOException;
