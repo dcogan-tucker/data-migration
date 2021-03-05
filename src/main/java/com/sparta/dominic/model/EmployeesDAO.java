@@ -1,6 +1,7 @@
 package com.sparta.dominic.model;
 
 import com.sparta.dominic.controller.EmployeeDTOManager;
+import com.sparta.dominic.util.DataMigrationLogger;
 import com.sparta.dominic.view.Printer;
 
 import java.io.FileReader;
@@ -8,7 +9,6 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.Properties;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static java.sql.Statement.SUCCESS_NO_INFO;
 
@@ -22,8 +22,7 @@ public class EmployeesDAO {
             properties = new Properties();
             properties.load(new FileReader("src/main/resources/login.properties"));
         } catch (IOException e) {
-            Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            DataMigrationLogger.getLogger().log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -70,8 +69,7 @@ public class EmployeesDAO {
             }
             Printer.printMessage(employeesAdded + " Employees Have Been Successfully Added to the Employees Table.");
         } catch (SQLException e) {
-            Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            DataMigrationLogger.getLogger().log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -82,8 +80,7 @@ public class EmployeesDAO {
              PreparedStatement loadDataStatement = connection.prepareStatement(loadData)) {
             loadDataStatement.executeUpdate();
         } catch (SQLException e) {
-            Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            DataMigrationLogger.getLogger().log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -93,8 +90,7 @@ public class EmployeesDAO {
             connection = DriverManager.getConnection((String) properties.get("url"),
                     properties.getProperty("username"), properties.getProperty("password"));
         } catch (SQLException e) {
-            Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            DataMigrationLogger.getLogger().log(Level.SEVERE, e.getMessage(), e);
         }
         return connection;
     }
@@ -127,8 +123,7 @@ public class EmployeesDAO {
                 Printer.printMessage("Employees Table Created.\n");
             }
         } catch (SQLException e) {
-            Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            DataMigrationLogger.getLogger().log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -142,8 +137,7 @@ public class EmployeesDAO {
                 Printer.printMessage("Employees Table Dropped.\n");
             }
         } catch (SQLException e) {
-            Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            DataMigrationLogger.getLogger().log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -154,8 +148,7 @@ public class EmployeesDAO {
                 return true;
             }
         } catch (SQLException e) {
-            Logger logger = Logger.getLogger(this.getClass().getSimpleName() + "Logger");
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            DataMigrationLogger.getLogger().log(Level.SEVERE, e.getMessage(), e);
         }
         return false;
     }

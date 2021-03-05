@@ -4,7 +4,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.sql.Date;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class DateFormatter {
     private static final String DATE_FORMAT_STRING = "dd/MM/yyyy";
@@ -15,8 +14,7 @@ public class DateFormatter {
         try {
             date1 = new Date(DATE_FORMAT.parse(date).getTime());
         } catch (ParseException e) {
-            Logger logger = Logger.getLogger(DateFormatter.class.getSimpleName() + "Logger");
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            DataMigrationLogger.getLogger().log(Level.SEVERE, e.getMessage(), e);
         }
         return date1;
     }
