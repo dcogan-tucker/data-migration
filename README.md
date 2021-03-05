@@ -6,6 +6,8 @@ This goal of this project was to develop a data migration program that could tak
 
 ## Background
 
+### File Readers
+
 ### DTO
 
 ### DAO
@@ -23,5 +25,7 @@ This goal of this project was to develop a data migration program that could tak
 ## Future Steps
 
 ### Performance Testing
+
+### Extend Usability
 
 ### GUI
